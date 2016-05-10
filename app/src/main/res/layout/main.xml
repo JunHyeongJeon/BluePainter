@@ -21,13 +21,7 @@
     android:layout_gravity="center"
     android:gravity="center"
     >
-    <ListView android:id="@+id/in"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="9"
-        android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll"
-        />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"

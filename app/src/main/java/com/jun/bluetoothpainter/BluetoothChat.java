@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,6 +33,9 @@ import android.view.inputmethod.EditorInfo;
 
 public class BluetoothChat extends AppCompatActivity {
 
+    private Paint mPaint;
+    private Path mPath;
+
     // Debugging
     private static final String TAG = "BluetoothChat";
     private static final boolean D = true;
@@ -52,14 +57,14 @@ public class BluetoothChat extends AppCompatActivity {
 
     // Layout Views
 //    private TextView mTitle;
-    private ListView mConversationView;
+//    private ListView mConversationView;
     private EditText mOutEditText;
     private Button mSendButton;
 
     // Name of the connected device
     private String mConnectedDeviceName = null;
     // Array adapter for the conversation thread
-    private ArrayAdapter<String> mConversationArrayAdapter;
+//    private ArrayAdapter<String> mConversationArrayAdapter;
     // String buffer for outgoing messages
     private StringBuffer mOutStringBuffer;
     // Local Bluetooth adapter
@@ -122,15 +127,26 @@ public class BluetoothChat extends AppCompatActivity {
                 mChatService.start();
             }
         }
+
+//        setContentView(new Painter(this));
+//        mPaint = new Paint();
+//        mPaint.setAntiAlias(true);
+//        mPaint.setDither(true);
+//        mPaint.setColor(0xFFFFFF00);
+//        mPaint.setStyle(Paint.Style.STROKE);
+//        mPaint.setStrokeJoin(Paint.Join.ROUND);
+//        mPaint.setStrokeCap(Paint.Cap.ROUND);
+//        mPaint.setStrokeWidth(8);
+
     }
 
     private void setupChat() {
         Log.d(TAG, "setupChat()");
 
         // Initialize the array adapter for the conversation thread
-        mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
-        mConversationView = (ListView) findViewById(R.id.in);
-        mConversationView.setAdapter(mConversationArrayAdapter);
+//        mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
+//        mConversationView = (ListView) findViewById(R.id.in);
+//        mConversationView.setAdapter(mConversationArrayAdapter);
 
         // Initialize the compose field with a listener for the return key
         mOutEditText = (EditText) findViewById(R.id.edit_text_out);
@@ -233,7 +249,7 @@ public class BluetoothChat extends AppCompatActivity {
 //                            mTitle.setText(R.string.title_connected_to);
 //                            mTitle.append(mConnectedDeviceName);
                             Toast.makeText(getApplicationContext(), R.string.title_connected_to, Toast.LENGTH_SHORT).show();
-                            mConversationArrayAdapter.clear();
+//                            mConversationArrayAdapter.clear();
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
 //                            mTitle.setText(R.string.title_connecting);
@@ -250,13 +266,14 @@ public class BluetoothChat extends AppCompatActivity {
                     byte[] writeBuf = (byte[]) msg.obj;
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
-                    mConversationArrayAdapter.add("Me:  " + writeMessage);
+                    //mConversationArrayAdapter.add("Me:  " + writeMessage);
+
                     break;
                 case MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+                    //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
                     break;
                 case MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -347,6 +364,8 @@ public class BluetoothChat extends AppCompatActivity {
         alert.show();
 
     }
+
+
 
 
 }

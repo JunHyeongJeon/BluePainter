@@ -5,17 +5,12 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Window;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.bluetooth.BluetoothDevice;
@@ -32,9 +27,6 @@ import android.view.inputmethod.EditorInfo;
 
 
 public class BluetoothChat extends AppCompatActivity {
-
-    private Paint mPaint;
-    private Path mPath;
 
     // Debugging
     private static final String TAG = "BluetoothChat";
@@ -72,6 +64,7 @@ public class BluetoothChat extends AppCompatActivity {
     // Member object for the chat services
     private BluetoothChatService mChatService = null;
 
+    private Painter mPainter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +78,8 @@ public class BluetoothChat extends AppCompatActivity {
 //        mTitle.setText(R.string.app_name);
 //        mTitle = (TextView) findViewById(R.id.title_right_text);
 
+        mPainter = new Painter(this);
+        Log.d("testlog", ""+mPainter);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // If the adapter is null, then Bluetooth is not supported
@@ -128,15 +123,14 @@ public class BluetoothChat extends AppCompatActivity {
             }
         }
 
-//        setContentView(new Painter(this));
-//        mPaint = new Paint();
-//        mPaint.setAntiAlias(true);
-//        mPaint.setDither(true);
-//        mPaint.setColor(0xFFFFFF00);
-//        mPaint.setStyle(Paint.Style.STROKE);
-//        mPaint.setStrokeJoin(Paint.Join.ROUND);
-//        mPaint.setStrokeCap(Paint.Cap.ROUND);
-//        mPaint.setStrokeWidth(8);
+        setContentView(mPainter);
+        mPainter.getmPaint().setAntiAlias(true);
+        mPainter.getmPaint().setDither(true);
+        mPainter.getmPaint().setColor(getResources().getColor(R.color.colorAccent));
+        mPainter.getmPaint().setStyle(Paint.Style.STROKE);
+        mPainter.getmPaint().setStrokeJoin(Paint.Join.ROUND);
+        mPainter.getmPaint().setStrokeCap(Paint.Cap.ROUND);
+        mPainter.getmPaint().setStrokeWidth(4);
 
     }
 
@@ -332,7 +326,6 @@ public class BluetoothChat extends AppCompatActivity {
 //                 Launch the DeviceListActivity to see devices and do scan
                 Intent serverIntent = new Intent(this, DeviceListActivity.class);
                 startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
-
                 return true;
             case R.id.discoverable:
                 // Ensure this device is discoverable by others

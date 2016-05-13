@@ -9,21 +9,18 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
+import android.view.MotionEvent;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
 import android.os.Message;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
-
 
 
 public class BluetoothChat extends AppCompatActivity {
@@ -47,17 +44,11 @@ public class BluetoothChat extends AppCompatActivity {
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
 
-    // Layout Views
-//    private TextView mTitle;
-//    private ListView mConversationView;
-    private EditText mOutEditText;
-    private Button mSendButton;
+//    private EditText mOutEditText;
+//    private Button mSendButton;
 
     // Name of the connected device
     private String mConnectedDeviceName = null;
-    // Array adapter for the conversation thread
-//    private ArrayAdapter<String> mConversationArrayAdapter;
-    // String buffer for outgoing messages
     private StringBuffer mOutStringBuffer;
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
@@ -65,22 +56,34 @@ public class BluetoothChat extends AppCompatActivity {
     private BluetoothChatService mChatService = null;
 
     private Painter mPainter;
+    private TextView mConnectStutus;
+
+    private float initPointX=0;
+    private float initPointY=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 
         setContentView(R.layout.main);
-//        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title);
-
-        // Set up the custom title
-//        mTitle = (TextView) findViewById(R.id.title_left_text);
-//        mTitle.setText(R.string.app_name);
-//        mTitle = (TextView) findViewById(R.id.title_right_text);
-
         mPainter = new Painter(this);
-        Log.d("testlog", ""+mPainter);
+
+        LinearLayout view =(LinearLayout)findViewById(R.id.container);
+        initPointX = view.getLeft();
+        initPointY = view.getTop();
+        Log.v("view_point",":"+initPointX+" :"+initPointY+" :"+view.getBottom()+ " :"+view.getRight());
+//        view.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+        view.addView(mPainter);
+        mPainter.getmPaint().setAntiAlias(true);
+        mPainter.getmPaint().setDither(true);
+        mPainter.getmPaint().setColor(getResources().getColor(R.color.colorAccent));
+        mPainter.getmPaint().setStyle(Paint.Style.STROKE);
+        mPainter.getmPaint().setStrokeJoin(Paint.Join.ROUND);
+        mPainter.getmPaint().setStrokeCap(Paint.Cap.ROUND);
+        mPainter.getmPaint().setStrokeWidth(4);
+
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        mConnectStutus = (TextView) findViewById(R.id.connect_status);
 
         // If the adapter is null, then Bluetooth is not supported
         if (mBluetoothAdapter == null) {
@@ -89,6 +92,39 @@ public class BluetoothChat extends AppCompatActivity {
             return;
         }
 
+    }
+
+    public void onButtonClick(View v){
+        switch (v.getId()){
+            case R.id.button_text:
+                final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+                alert.setTitle(R.string.edit_text);
+                final EditText input = new EditText(this);
+                alert.setView(input);
+                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        String value = input.getText().toString();
+                        sendMessage(value);
+                    }
+                });
+                alert.setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                            }
+                        });
+                alert.show();
+
+                break;
+            case R.id.button_start:
+                break;
+            case R.id.button_stop:
+                break;
+            case R.id.button_reset:
+                mPainter.getmPath().reset();
+                mPainter.invalidate();
+                break;
+        }
     }
 
     @Override
@@ -123,41 +159,13 @@ public class BluetoothChat extends AppCompatActivity {
             }
         }
 
-        setContentView(mPainter);
-        mPainter.getmPaint().setAntiAlias(true);
-        mPainter.getmPaint().setDither(true);
-        mPainter.getmPaint().setColor(getResources().getColor(R.color.colorAccent));
-        mPainter.getmPaint().setStyle(Paint.Style.STROKE);
-        mPainter.getmPaint().setStrokeJoin(Paint.Join.ROUND);
-        mPainter.getmPaint().setStrokeCap(Paint.Cap.ROUND);
-        mPainter.getmPaint().setStrokeWidth(4);
 
     }
 
     private void setupChat() {
         Log.d(TAG, "setupChat()");
 
-        // Initialize the array adapter for the conversation thread
-//        mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
-//        mConversationView = (ListView) findViewById(R.id.in);
-//        mConversationView.setAdapter(mConversationArrayAdapter);
 
-        // Initialize the compose field with a listener for the return key
-        mOutEditText = (EditText) findViewById(R.id.edit_text_out);
-        mOutEditText.setOnEditorActionListener(mWriteListener);
-
-        // Initialize the send button with a listener that for click events
-        mSendButton = (Button) findViewById(R.id.button_send);
-        mSendButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                // Send a message using content of the edit text widget
-                TextView view = (TextView) findViewById(R.id.edit_text_out);
-                String message = view.getText().toString();
-                sendMessage(message);
-            }
-        });
-
-        // Initialize the BluetoothChatService to perform bluetooth connections
         mChatService = new BluetoothChatService(this, mHandler);
 
         // Initialize the buffer for outgoing messages
@@ -201,6 +209,7 @@ public class BluetoothChat extends AppCompatActivity {
     private void sendMessage(String message) {
         // Check that we're actually connected before trying anything
         if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+            mConnectStutus.setText(R.string.title_not_connected_sending);
             Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -213,23 +222,10 @@ public class BluetoothChat extends AppCompatActivity {
 
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
-            mOutEditText.setText(mOutStringBuffer);
+//            mOutEditText.setText(mOutStringBuffer);
         }
     }
 
-    // The action listener for the EditText widget, to listen for the return key
-    private TextView.OnEditorActionListener mWriteListener =
-            new TextView.OnEditorActionListener() {
-                public boolean onEditorAction(TextView view, int actionId, KeyEvent event) {
-                    // If the action is a key-up event on the return key, send the message
-                    if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_UP) {
-                        String message = view.getText().toString();
-                        sendMessage(message);
-                    }
-                    if(D) Log.i(TAG, "END onEditorAction");
-                    return true;
-                }
-            };
 
     // The Handler that gets information back from the BluetoothChatService
     private final Handler mHandler = new Handler() {
@@ -240,34 +236,22 @@ public class BluetoothChat extends AppCompatActivity {
                     if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
                     switch (msg.arg1) {
                         case BluetoothChatService.STATE_CONNECTED:
-//                            mTitle.setText(R.string.title_connected_to);
-//                            mTitle.append(mConnectedDeviceName);
-                            Toast.makeText(getApplicationContext(), R.string.title_connected_to, Toast.LENGTH_SHORT).show();
-//                            mConversationArrayAdapter.clear();
+                            mConnectStutus.setText("conneted:"+mConnectedDeviceName);
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
-//                            mTitle.setText(R.string.title_connecting);
-                            Toast.makeText(getApplicationContext(), R.string.title_connecting, Toast.LENGTH_SHORT).show();
+                            mConnectStutus.setText(R.string.title_connecting);
                             break;
                         case BluetoothChatService.STATE_LISTEN:
                         case BluetoothChatService.STATE_NONE:
-//                            mTitle.setText(R.string.title_not_connected);
-                            Toast.makeText(getApplicationContext(), R.string.title_not_connected, Toast.LENGTH_SHORT).show();
+                            mConnectStutus.setText(R.string.title_not_connected);
                             break;
                     }
                     break;
                 case MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    //mConversationArrayAdapter.add("Me:  " + writeMessage);
 
                     break;
                 case MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
-                    //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+
                     break;
                 case MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -340,23 +324,57 @@ public class BluetoothChat extends AppCompatActivity {
     {
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle(R.string.finish);
-        // alert.setMessage("Message");
-
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 finish();
             }
         });
-
         alert.setNegativeButton("Cancel",
             new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                 }
         });
-
         alert.show();
 
     }
+
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+        float x = event.getX();
+        float y = event.getY();
+
+        String stringX = ""+(int)x;
+        String stringY = ""+(int)y;
+        if(x<1000)stringX = "0"+ stringX;
+        if(y<1000)stringY = "0"+ stringY;
+
+        String msg = "";
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                mPainter.touchStart(x, y);
+                msg+="S"+stringX+" "+stringY+"E\n";
+                sendLocationMessage(msg);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                mPainter.touchMove(x, y);
+                msg+="S"+stringX+" "+stringY+"E\n";
+                sendLocationMessage(msg);
+                break;
+            case MotionEvent.ACTION_UP:
+                msg+="S"+7777+" "+7777+"E\n";
+                sendMessage(msg);
+                break;
+        }
+        mPainter.invalidate();
+        return true;
+    }
+
+    public void sendLocationMessage(String msg){
+        if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED)
+            sendMessage(msg);
+
+    }
+
 
 
 

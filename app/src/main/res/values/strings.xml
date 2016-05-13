@@ -8,6 +8,11 @@
     <string name="title_connecting">connecting...</string>
     <string name="title_connected_to">connected: </string>
     <string name="title_not_connected">not connected</string>
+    <string name="title_not_connected_sending">not connected : No devices paired</string>
+    <string name="button_text">텍스트</string>
+    <string name="button_start">시작</string>
+    <string name="button_stop">정지</string>
+    <string name="button_reset">리셋</string>
 
     <!--  DeviceListActivity -->
     <string name="scanning">scanning for devices...</string>
@@ -24,4 +29,5 @@
 
     <!-- Modal windows -->
     <string name="finish">Do you want to finish?</string>
+    <string name="edit_text">input the text</string>
 </resources>

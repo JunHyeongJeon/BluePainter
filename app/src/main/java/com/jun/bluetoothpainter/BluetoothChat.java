@@ -43,6 +43,7 @@ public class BluetoothChat extends AppCompatActivity {
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
+    public static final int SEND_MESSAGE_SPEED = 300;
 
 //    private EditText mOutEditText;
 //    private Button mSendButton;
@@ -58,19 +59,27 @@ public class BluetoothChat extends AppCompatActivity {
     private Painter mPainter;
     private TextView mConnectStutus;
 
-    private float initPointX=0;
-    private float initPointY=0;
-
     private String mLocation[] = new String[1000];
     private String temp[];
     private int mDrawCount = 0;
+    private Thread mThread;
+    private boolean isThreadEnable= false;
+    public boolean getReceive() {
+        return isReceive;
+    }
+
+    public void setReceive(boolean receive) {
+        isReceive = receive;
+    }
+
+    private boolean isReceive=false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
         mPainter = new Painter(this);
-
+        mThread = new MyThread();
         LinearLayout view =(LinearLayout)findViewById(R.id.container);
         view.addView(mPainter);
         mPainter.getmPaint().setAntiAlias(true);
@@ -119,9 +128,15 @@ public class BluetoothChat extends AppCompatActivity {
 
                 break;
             case R.id.button_start:
-
+                if(!isThreadEnable) {
+                    isThreadEnable = true;
+                    mThread = new MyThread();
+                    mThread.start();
+                }
                 break;
             case R.id.button_stop:
+                isThreadEnable=false;
+
                 break;
             case R.id.button_reset:
                 mPainter.getmPath().reset();
@@ -258,6 +273,11 @@ public class BluetoothChat extends AppCompatActivity {
 
                     break;
                 case MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    if("D".equals(readMessage))
+                        setReceive(true);
+
 
                     break;
                 case MESSAGE_DEVICE_NAME:
@@ -380,6 +400,41 @@ public class BluetoothChat extends AppCompatActivity {
     public void drawCountAdd(){
         if(mDrawCount<999)
             mDrawCount++;
+    }
+
+    public class MyThread extends Thread{
+        public MyThread() {
+        }
+        public void run(){
+            while(isThreadEnable){
+                for (int i = 0; i < mDrawCount; i++) {
+                    temp = mLocation[i].split(":");
+                    Log.v("thread", mLocation[i]);
+
+                    for (int j = 0; j < temp.length; j++) {
+                        while (!getReceive() &&
+                                mChatService.getState() == BluetoothChatService.STATE_CONNECTED && isThreadEnable) {
+                            try {
+                                sendMessage(temp[j]);
+                                Thread.sleep(SEND_MESSAGE_SPEED);
+                            } catch (Exception e) {
+
+                            }
+                        }
+                        setReceive(false);
+                    }
+
+                }
+                isThreadEnable = false;
+
+            }
+
+            Log.v("thread", " thread end.");
+
+
+
+        }
+
     }
 
 

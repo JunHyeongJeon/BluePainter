@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Bluetooth Painter</string>
+    <string name="app_name">내 마음대로</string>
 
     <!--  BluetoothChat -->
     <string name="send">Send</string>

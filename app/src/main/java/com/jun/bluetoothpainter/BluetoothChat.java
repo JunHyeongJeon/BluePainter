@@ -60,6 +60,10 @@ public class BluetoothChat extends AppCompatActivity {
 
     private float initPointX=0;
     private float initPointY=0;
+
+    private String mLocation[] = new String[1000];
+    private String temp[];
+    private int mDrawCount = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,10 +72,6 @@ public class BluetoothChat extends AppCompatActivity {
         mPainter = new Painter(this);
 
         LinearLayout view =(LinearLayout)findViewById(R.id.container);
-        initPointX = view.getLeft();
-        initPointY = view.getTop();
-        Log.v("view_point",":"+initPointX+" :"+initPointY+" :"+view.getBottom()+ " :"+view.getRight());
-//        view.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
         view.addView(mPainter);
         mPainter.getmPaint().setAntiAlias(true);
         mPainter.getmPaint().setDither(true);
@@ -91,6 +91,8 @@ public class BluetoothChat extends AppCompatActivity {
             finish();
             return;
         }
+        for(int i=0;i<1000;i++)
+            mLocation[i]="";
 
     }
 
@@ -117,12 +119,17 @@ public class BluetoothChat extends AppCompatActivity {
 
                 break;
             case R.id.button_start:
+
                 break;
             case R.id.button_stop:
                 break;
             case R.id.button_reset:
                 mPainter.getmPath().reset();
                 mPainter.invalidate();
+                mDrawCount=0;
+                for(int i=0;i<1000;i++)
+                    mLocation[i]="";
+
                 break;
         }
     }
@@ -352,29 +359,28 @@ public class BluetoothChat extends AppCompatActivity {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 mPainter.touchStart(x, y);
-                msg+="S"+stringX+" "+stringY+"E\n";
-                sendLocationMessage(msg);
+                msg+="S"+stringX+" "+stringY+"E:";
+                mLocation[mDrawCount] += msg;
                 break;
             case MotionEvent.ACTION_MOVE:
                 mPainter.touchMove(x, y);
-                msg+="S"+stringX+" "+stringY+"E\n";
-                sendLocationMessage(msg);
+                msg+="S"+stringX+" "+stringY+"E:";
+                mLocation[mDrawCount] += msg;
                 break;
             case MotionEvent.ACTION_UP:
-                msg+="S"+7777+" "+7777+"E\n";
-                sendMessage(msg);
+                msg+="S"+7777+" "+7777+"E:";
+                mLocation[mDrawCount] += msg;
+                drawCountAdd();
                 break;
         }
         mPainter.invalidate();
         return true;
     }
 
-    public void sendLocationMessage(String msg){
-        if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED)
-            sendMessage(msg);
-
+    public void drawCountAdd(){
+        if(mDrawCount<999)
+            mDrawCount++;
     }
-
 
 
 
